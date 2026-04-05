@@ -1,80 +1,87 @@
 # NebulaProxy
 
-A Python-based multi-protocol local proxy toolkit with an optional PySide6 desktop console for configuration, validation, and runtime control.
+一个基于 Python 的多协议本地代理工具，附带可选的 PySide6 桌面管理界面，用于配置管理、连通性验证和运行控制。
 
-## Overview
+## 项目简介
 
-NebulaProxy provides a local proxy entrypoint that can accept client traffic in multiple proxy protocols and forward requests either directly to the destination or through an upstream HTTP proxy.
+NebulaProxy 提供一个本地代理入口，可接收多种代理协议的客户端请求，并根据配置选择：
 
-The repository contains two main runtime components:
+- 直接连接目标主机
+- 经由上游 HTTP 代理转发
 
-- `proxy.py`: the core multi-protocol proxy server
-- `NebulaGate.py`: a PySide6 desktop GUI for managing configuration and controlling the proxy service
+仓库当前包含两个主要运行组件：
 
-This project is suitable for local proxy testing, upstream proxy validation, and lightweight traffic relay scenarios.
+- `proxy.py`：核心多协议代理服务
+- `NebulaGate.py`：PySide6 图形管理界面，用于配置、验证和控制代理服务
 
-## Features
+该项目适用于本地代理测试、上游代理验证以及轻量级流量转发场景。
 
-- Supports multiple client-facing proxy protocols
+## 功能特性
+
+- 支持多种客户端代理协议
   - SOCKS5
   - SOCKS4 / SOCKS4a
-  - HTTP proxy
-  - HTTPS via CONNECT
-- Supports two relay modes
-  - Direct outbound connection
-  - Forwarding through an upstream HTTP proxy
-- Optional SOCKS5 username/password authentication for local clients
-- Optional Basic authentication for the upstream proxy
-- Configurable connection limit
-- Configurable relay timeout and buffer size
-- Rotating runtime log and traffic log output
-- Desktop GUI for loading, saving, validating, starting, stopping, and observing the proxy service
+  - HTTP
+  - HTTPS CONNECT
+- 支持两种出站模式
+  - 直连目标地址
+  - 通过上游 HTTP 代理转发
+- 支持本地 SOCKS5 用户名/密码认证
+- 支持上游代理 Basic 认证
+- 支持最大连接数限制
+- 支持配置中继超时与缓冲区大小
+- 支持运行日志和流量日志
+- 提供桌面 GUI，用于加载、保存、验证、启动、停止和观察代理服务
 
-## Repository Layout
+## 仓库结构
 
 ```text
 .
-├── proxy.py         # Core proxy server implementation
-├── NebulaGate.py    # PySide6 desktop management console
-├── proxy.conf       # Runtime configuration file
-└── logs/            # Created automatically at runtime
+├── proxy.py           # 核心代理服务实现
+├── NebulaGate.py      # PySide6 桌面管理界面
+├── proxy.conf         # 实际运行配置文件
+├── proxy.example.conf # 脱敏示例配置文件
+├── requirements.txt   # GUI 依赖清单
+├── LICENSE            # 项目许可证
+├── CHANGELOG.md       # 变更记录
+└── logs/              # 运行时自动创建
 ```
 
-## Requirements
+## 环境要求
 
-- Python 3.10 or later
-- Windows is recommended for the current GUI experience
-- `PySide6` is required only for the desktop GUI
+- Python 3.10 或更高版本
+- 当前 GUI 使用体验更适合 Windows 环境
+- `PySide6` 仅在使用桌面界面时需要安装
 
-## Installation
+## 安装
 
-### Option 1: Core proxy server only
+### 仅使用命令行代理服务
 
-If you only want to run the proxy service from the command line, Python itself is enough for the current codebase.
+如果只运行命令行代理服务，当前代码库不依赖额外第三方包。
 
 ```bash
 python -m pip install --upgrade pip
 ```
 
-### Option 2: Proxy server with GUI
+### 使用桌面管理界面
 
-To use the desktop management console, install the GUI dependency:
+如需使用 GUI，请安装依赖：
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-Or install it directly:
+或直接安装：
 
 ```bash
 python -m pip install PySide6
 ```
 
-## Configuration
+## 配置说明
 
-The default configuration file is `proxy.conf`.
+默认配置文件为 `proxy.conf`。如需快速开始，建议先复制 `proxy.example.conf` 并根据实际环境修改。
 
-### `[remote]` — upstream proxy settings
+### `[remote]` —— 上游代理配置
 
 ```ini
 [remote]
@@ -85,17 +92,17 @@ username = your_user
 password = your_pass
 ```
 
-Fields:
+字段说明：
 
-- `enabled`: enable or disable upstream proxy mode
-- `host`: upstream HTTP proxy host
-- `port`: upstream HTTP proxy port
-- `username`: upstream proxy username
-- `password`: upstream proxy password
+- `enabled`：是否启用上游代理模式
+- `host`：上游 HTTP 代理地址
+- `port`：上游 HTTP 代理端口
+- `username`：上游代理用户名
+- `password`：上游代理密码
 
-When `enabled = false`, the proxy connects directly to the destination host.
+当 `enabled = false` 时，服务将直接连接目标地址。
 
-### `[local]` — local listener settings
+### `[local]` —— 本地监听配置
 
 ```ini
 [local]
@@ -104,13 +111,13 @@ port = 7463
 max_connections = 200
 ```
 
-Fields:
+字段说明：
 
-- `host`: local bind address
-- `port`: local listening port
-- `max_connections`: maximum concurrent connection count
+- `host`：本地绑定地址
+- `port`：本地监听端口
+- `max_connections`：最大并发连接数
 
-### `[socks5_auth]` — local SOCKS5 authentication
+### `[socks5_auth]` —— 本地 SOCKS5 认证配置
 
 ```ini
 [socks5_auth]
@@ -119,13 +126,13 @@ username = local_user
 password = local_pass
 ```
 
-Fields:
+字段说明：
 
-- `enabled`: enable or disable SOCKS5 username/password authentication
-- `username`: SOCKS5 username
-- `password`: SOCKS5 password
+- `enabled`：是否启用 SOCKS5 用户名/密码认证
+- `username`：SOCKS5 用户名
+- `password`：SOCKS5 密码
 
-### `[relay]` — relay settings
+### `[relay]` —— 数据中继配置
 
 ```ini
 [relay]
@@ -133,101 +140,108 @@ timeout = 60
 buffer_size = 4096
 ```
 
-Fields:
+字段说明：
 
-- `timeout`: relay timeout in seconds
-- `buffer_size`: relay buffer size in bytes
+- `timeout`：中继超时时间，单位为秒
+- `buffer_size`：中继缓冲区大小，单位为字节
 
-## Usage
+## 使用方式
 
-### Start the proxy service from the command line
+### 启动命令行代理服务
 
 ```bash
 python proxy.py
 ```
 
-At startup, the service will:
+程序启动时会：
 
-- read `proxy.conf`
-- validate the upstream proxy when enabled
-- bind the local listening socket
-- create the `logs/` directory if needed
-- write runtime and traffic logs
+- 读取 `proxy.conf`
+- 在启用上游代理时执行连通性验证
+- 绑定本地监听地址和端口
+- 在需要时创建 `logs/` 目录
+- 写入运行日志和流量日志
 
-### Start the desktop GUI
+### 启动桌面管理界面
 
 ```bash
 python NebulaGate.py
 ```
 
-The GUI supports:
+GUI 提供以下能力：
 
-- loading configuration
-- saving configuration
-- validating the upstream proxy
-- starting the proxy service
-- stopping the proxy service
-- viewing runtime logs
-- opening the log directory
+- 加载配置
+- 保存配置
+- 验证上游代理
+- 启动代理服务
+- 停止代理服务
+- 查看运行日志
+- 快速打开日志目录
 
-## Logging
+## 日志说明
 
-The application creates a `logs/` directory automatically and writes the following files:
+程序会自动创建 `logs/` 目录，并写入以下文件：
 
-- `logs/proxy.log`: runtime events, startup details, and error messages
-- `logs/traffic.log`: traffic statistics for handled sessions
+- `logs/proxy.log`：运行事件、启动信息和错误日志
+- `logs/traffic.log`：已处理连接的流量统计信息
 
-The traffic log records:
+流量日志记录字段包括：
 
-- timestamp
-- client address
-- protocol
-- target host
-- target port
-- status
-- upstream byte count
-- downstream byte count
-- elapsed time in milliseconds
+- 时间戳
+- 客户端地址
+- 协议类型
+- 目标主机
+- 目标端口
+- 状态
+- 上行字节数
+- 下行字节数
+- 耗时（毫秒）
 
-## Typical Use Cases
+## 典型使用场景
 
-### Local unified proxy endpoint
+### 本地统一代理入口
 
-Configure your browser, script, or client software to use the local listener, for example:
+将浏览器、脚本或其他客户端指向本地监听地址，例如：
 
 - `127.0.0.1:7463`
 
-NebulaProxy then decides whether to connect directly or route through the configured upstream proxy.
+NebulaProxy 会根据配置决定是直连还是通过上游代理转发。
 
-### Upstream proxy validation
+### 上游代理连通性验证
 
-If you operate an upstream HTTP proxy, the GUI can be used to verify connectivity and authentication before traffic is relayed through it.
+如果你维护一个上游 HTTP 代理，可通过 GUI 先验证连通性和认证状态，再让真实流量经过该代理。
 
-### Access control for SOCKS5 clients
+### 本地 SOCKS5 访问控制
 
-When `[socks5_auth]` is enabled, SOCKS5 clients must authenticate before a connection is established.
+启用 `[socks5_auth]` 后，SOCKS5 客户端必须先通过认证，代理才会接受连接。
 
-## Notes and Limitations
+## 注意事项与限制
 
-- `NebulaGate.py` uses `os.startfile` to open the log directory, which is Windows-specific behavior.
-- Upstream validation currently tests connectivity against `www.baidu.com:80`, so validation may fail in restricted network environments.
-- The repository does not currently include a sample config template such as `proxy.example.conf`.
-- The repository does not currently include packaging metadata or a release workflow.
+- `NebulaGate.py` 使用 `os.startfile` 打开日志目录，该行为依赖 Windows。
+- 当前上游验证默认以 `www.baidu.com:80` 作为测试目标，因此在受限网络环境中可能验证失败。
+- 仓库已提供脱敏示例配置 `proxy.example.conf`，可作为新环境初始化模板。
+- 仓库目前未提供打包元数据或发布流程。
 
-## Security Notice
+## 安全说明
 
-- Do not commit real proxy credentials to source control.
-- Keep `proxy.conf` out of public distribution when it contains live usernames or passwords.
-- Replace example placeholders with environment-appropriate values before running the service.
+- 不要将真实代理凭据提交到版本控制系统。
+- 当 `proxy.conf` 包含真实用户名或密码时，应将其视为敏感文件。
+- 在真实环境中运行前，请先将示例占位值替换为实际配置。
 
-## Quick Start
+## 快速开始
 
-1. Edit `proxy.conf`
-2. Choose one startup mode:
+1. 编辑 `proxy.conf`
+2. 选择一种启动方式：
    - `python proxy.py`
    - `python NebulaGate.py`
-3. Point your client to the configured local listener
-4. Check `logs/proxy.log` and `logs/traffic.log`
+3. 将客户端指向配置好的本地监听地址
+4. 检查 `logs/proxy.log` 和 `logs/traffic.log`
+
+## 项目元信息
+
+- 依赖清单：`requirements.txt`
+- 示例配置：`proxy.example.conf`
+- 许可证：`LICENSE`（MIT）
+- 变更记录：`CHANGELOG.md`
 
 ## English Documentation
 

@@ -34,10 +34,14 @@ This project is suitable for local proxy testing, relay validation, and lightwei
 
 ```text
 .
-├── proxy.py         # Core proxy server implementation
-├── NebulaGate.py    # PySide6 desktop management console
-├── proxy.conf       # Runtime configuration file
-└── logs/            # Created automatically at runtime
+├── proxy.py           # Core proxy server implementation
+├── NebulaGate.py      # PySide6 desktop management console
+├── proxy.conf         # Active runtime configuration
+├── proxy.example.conf # Sanitized example configuration
+├── requirements.txt   # GUI dependency list
+├── LICENSE            # Project license
+├── CHANGELOG.md       # Change history
+└── logs/              # Created automatically at runtime
 ```
 
 ## Requirements
@@ -72,7 +76,7 @@ python -m pip install PySide6
 
 ## Configuration
 
-The default configuration file is `proxy.conf`.
+The default configuration file is `proxy.conf`. For new environments, you can start from `proxy.example.conf` and adjust the values for your setup.
 
 ### `[remote]` — upstream proxy settings
 
@@ -211,13 +215,21 @@ When `[socks5_auth]` is enabled, SOCKS5 clients must provide valid credentials b
 
 - `NebulaGate.py` uses `os.startfile` to open the log directory, which is Windows-specific.
 - Upstream validation currently targets `www.baidu.com:80`, so validation can fail in restricted networks.
-- The repository does not currently provide a packaged installer, sample config template, or release process.
+- The repository includes a sanitized example configuration file, `proxy.example.conf`, for bootstrapping new environments.
+- The repository does not currently provide a packaged installer or release process.
 
 ## Security Notice
 
 - Do not commit real proxy credentials to source control.
 - Treat `proxy.conf` as sensitive when it contains live usernames or passwords.
 - Replace example placeholder values before using the service in a real environment.
+
+## Project Metadata
+
+- Dependency list: `requirements.txt`
+- Example configuration: `proxy.example.conf`
+- License: `LICENSE` (MIT)
+- Changelog: `CHANGELOG.md`
 
 ## Quick Start
 

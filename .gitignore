@@ -1,0 +1,10 @@
+logs/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+.venv/
+venv/
+proxy.local.conf
+*.local.conf
