@@ -1,95 +1,196 @@
 # NebulaProxy
 
-一个基于 Python 的多协议本地代理工具，附带可选的 PySide6 桌面管理界面，用于配置管理、连通性验证和运行控制。
+> 一个基于 Python 的多协议本地代理工具，支持 SOCKS5、SOCKS4/4a、HTTP、HTTPS CONNECT，并提供可选的 PySide6 桌面管理界面。
 
-## 项目简介
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white)
+![Protocols](https://img.shields.io/badge/Protocols-SOCKS5%20%7C%20SOCKS4a%20%7C%20HTTP%20%7C%20HTTPS-1F6FEB)
+![GUI](https://img.shields.io/badge/GUI-PySide6-41CD52?logo=qt&logoColor=white)
+![Platform](https://img.shields.io/badge/Platform-Windows--friendly-6F42C1)
+![License](https://img.shields.io/badge/License-MIT-2EA043)
 
-NebulaProxy 提供一个本地代理入口，可接收多种代理协议的客户端请求，并根据配置选择：
+一个本地统一代理入口，适用于上游代理验证、轻量级流量转发、桌面化配置管理与本地代理测试。
+
+## 🌌 项目概览
+
+NebulaProxy 的核心目标，是在本地提供一个统一代理入口，接收多种客户端代理请求，再根据配置决定：
 
 - 直接连接目标主机
-- 经由上游 HTTP 代理转发
+- 通过上游 HTTP 代理转发
 
-仓库当前包含两个主要运行组件：
+项目当前由两个主要组件构成：
 
-- `proxy.py`：核心多协议代理服务
-- `NebulaGate.py`：PySide6 图形管理界面，用于配置、验证和控制代理服务
+- `proxy.py`：核心代理服务，负责协议识别、认证处理、连接建立、双向转发和日志记录
+- `NebulaGate.py`：桌面管理端，负责配置读写、上游验证、服务启停和日志展示
 
-该项目适用于本地代理测试、上游代理验证以及轻量级流量转发场景。
+该项目适合用于本地代理测试、上游代理可用性验证、轻量级流量转发以及桌面化代理管理场景。
 
-## 功能特性
+## ✨ 主要功能
 
-- 支持多种客户端代理协议
-  - SOCKS5
-  - SOCKS4 / SOCKS4a
-  - HTTP
-  - HTTPS CONNECT
-- 支持两种出站模式
-  - 直连目标地址
-  - 通过上游 HTTP 代理转发
+### 🌐 代理协议支持
+
+- SOCKS5
+- SOCKS4 / SOCKS4a
+- HTTP
+- HTTPS CONNECT
+
+### 🔀 出站模式支持
+
+- 直连目标地址
+- 通过上游 HTTP 代理转发
+
+### 🔐 认证与控制能力
+
 - 支持本地 SOCKS5 用户名/密码认证
 - 支持上游代理 Basic 认证
-- 支持最大连接数限制
-- 支持配置中继超时与缓冲区大小
-- 支持运行日志和流量日志
-- 提供桌面 GUI，用于加载、保存、验证、启动、停止和观察代理服务
+- 支持最大并发连接数限制
+- 支持中继超时与缓冲区大小配置
 
-## 仓库结构
+### 📝 可观测性与运维能力
 
-```text
-.
-├── proxy.py           # 核心代理服务实现
-├── NebulaGate.py      # PySide6 桌面管理界面
-├── proxy.conf         # 实际运行配置文件
-├── proxy.example.conf # 脱敏示例配置文件
-├── requirements.txt   # GUI 依赖清单
-├── LICENSE            # 项目许可证
-├── CHANGELOG.md       # 变更记录
-└── logs/              # 运行时自动创建
+- 启动日志与错误日志
+- 独立流量日志
+- 日志按天滚动
+- 桌面界面实时查看运行日志
+- 快速打开日志目录
+
+## ⚡ 快速开始
+
+1. 参考 `proxy.example.conf` 配置本地 `proxy.conf`
+2. 选择启动方式：
+   - `python proxy.py`
+   - `python NebulaGate.py`
+3. 将客户端代理指向本地监听地址
+4. 检查 `logs/proxy.log` 与 `logs/traffic.log`
+
+## 🧭 工作流程图
+
+### 代理流量路径图
+
+```mermaid
+flowchart TD
+    A[客户端 Client] --> B[本地监听 NebulaProxy]
+    B --> C{协议识别}
+    C --> D[SOCKS5 / SOCKS4a]
+    C --> E[HTTP / HTTPS CONNECT]
+    D --> F{本地认证是否启用}
+    E --> G[解析目标地址]
+    F -->|是| H[校验用户名和密码]
+    F -->|否| G
+    H --> G
+    G --> I{是否启用上游代理}
+    I -->|否| J[直连目标服务]
+    I -->|是| K[通过上游 HTTP 代理建立 CONNECT 隧道]
+    J --> L[双向数据中继]
+    K --> L
+    L --> M[记录运行日志与流量日志]
 ```
 
-## 环境要求
+### GUI 操作流程图
+
+```mermaid
+flowchart LR
+    A[打开 NebulaGate] --> B[加载配置]
+    B --> C[修改参数]
+    C --> D[保存配置]
+    D --> E[验证上游代理]
+    E --> F[启动代理服务]
+    F --> G[查看运行日志]
+    G --> H[停止代理服务]
+```
+
+### 配置决策图
+
+```mermaid
+flowchart TD
+    A[开始配置] --> B{需要通过上游代理转发吗}
+    B -->|否| C[配置 local 监听参数]
+    B -->|是| D[配置 remote 上游代理参数]
+    C --> E{需要本地 SOCKS5 认证吗}
+    D --> E
+    E -->|是| F[配置 socks5_auth 用户名和密码]
+    E -->|否| G[保持无认证模式]
+    F --> H[按需调整 relay 超时和缓冲区]
+    G --> H
+    H --> I[使用 CLI 或 GUI 启动]
+```
+
+## 🧰 环境要求
 
 - Python 3.10 或更高版本
-- 当前 GUI 使用体验更适合 Windows 环境
-- `PySide6` 仅在使用桌面界面时需要安装
+- Windows 环境下 GUI 体验更完整
+- 使用 GUI 时需要安装 `PySide6`
 
-## 安装
+## 📦 安装方式
 
-### 仅使用命令行代理服务
+### 仅使用命令行代理
 
-如果只运行命令行代理服务，当前代码库不依赖额外第三方包。
+如果只运行代理服务核心：
 
 ```bash
 python -m pip install --upgrade pip
 ```
 
+当前仓库中，代理核心本身不依赖额外第三方包。
+
 ### 使用桌面管理界面
 
-如需使用 GUI，请安装依赖：
+安装 GUI 依赖：
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
-或直接安装：
+或单独安装：
 
 ```bash
 python -m pip install PySide6
 ```
 
-## 配置说明
+## 🚀 使用方式
 
-默认配置文件为 `proxy.conf`。如需快速开始，建议先复制 `proxy.example.conf` 并根据实际环境修改。
+### 启动命令行代理服务
 
-### `[remote]` —— 上游代理配置
+```bash
+python proxy.py
+```
+
+启动后程序会：
+
+- 加载配置文件
+- 在启用上游模式时验证上游连通性
+- 绑定本地监听端口
+- 自动创建 `logs/` 目录
+- 写入运行日志和流量日志
+
+### 启动桌面管理界面
+
+```bash
+python NebulaGate.py
+```
+
+GUI 可执行的操作包括：
+
+- 加载配置
+- 保存配置
+- 验证上游代理
+- 启动代理
+- 停止代理
+- 查看运行日志
+- 打开日志目录
+
+## ⚙️ 配置说明
+
+默认配置文件为 `proxy.conf`。建议先参考 `proxy.example.conf` 创建或修改本地配置，不要直接在文档中保存真实账号密码。
+
+### `[remote]` 上游代理配置
 
 ```ini
 [remote]
 enabled = false
 host = 127.0.0.1
 port = 3128
-username = your_user
-password = your_pass
+username = your_upstream_user
+password = your_upstream_password
 ```
 
 字段说明：
@@ -100,9 +201,7 @@ password = your_pass
 - `username`：上游代理用户名
 - `password`：上游代理密码
 
-当 `enabled = false` 时，服务将直接连接目标地址。
-
-### `[local]` —— 本地监听配置
+### `[local]` 本地监听配置
 
 ```ini
 [local]
@@ -113,11 +212,11 @@ max_connections = 200
 
 字段说明：
 
-- `host`：本地绑定地址
+- `host`：本地监听地址
 - `port`：本地监听端口
 - `max_connections`：最大并发连接数
 
-### `[socks5_auth]` —— 本地 SOCKS5 认证配置
+### `[socks5_auth]` 本地 SOCKS5 认证
 
 ```ini
 [socks5_auth]
@@ -129,10 +228,10 @@ password = local_pass
 字段说明：
 
 - `enabled`：是否启用 SOCKS5 用户名/密码认证
-- `username`：SOCKS5 用户名
-- `password`：SOCKS5 密码
+- `username`：本地 SOCKS5 用户名
+- `password`：本地 SOCKS5 密码
 
-### `[relay]` —— 数据中继配置
+### `[relay]` 中继参数
 
 ```ini
 [relay]
@@ -142,107 +241,83 @@ buffer_size = 4096
 
 字段说明：
 
-- `timeout`：中继超时时间，单位为秒
-- `buffer_size`：中继缓冲区大小，单位为字节
+- `timeout`：中继超时时间，单位秒
+- `buffer_size`：单次转发缓冲区大小，单位字节
 
-## 使用方式
+## 🎯 典型使用场景
 
-### 启动命令行代理服务
+### 本地统一代理入口
 
-```bash
-python proxy.py
-```
+将浏览器、脚本或桌面应用统一指向本地监听地址，例如：
 
-程序启动时会：
+- `127.0.0.1:7463`
 
-- 读取 `proxy.conf`
-- 在启用上游代理时执行连通性验证
-- 绑定本地监听地址和端口
-- 在需要时创建 `logs/` 目录
-- 写入运行日志和流量日志
+由 NebulaProxy 负责将请求直连目标服务，或转发到指定上游代理。
 
-### 启动桌面管理界面
+### 上游 HTTP 代理验证
 
-```bash
-python NebulaGate.py
-```
+在接入上游代理前，可通过 GUI 先进行连通性验证，确认代理地址、端口和认证信息是否可用。
 
-GUI 提供以下能力：
+### 本地 SOCKS5 访问控制
 
-- 加载配置
-- 保存配置
-- 验证上游代理
-- 启动代理服务
-- 停止代理服务
-- 查看运行日志
-- 快速打开日志目录
+启用本地 SOCKS5 认证后，客户端必须先通过用户名/密码校验，才能建立代理连接。
 
-## 日志说明
+## 📝 日志说明
 
-程序会自动创建 `logs/` 目录，并写入以下文件：
+程序运行后会自动创建 `logs/` 目录，并生成以下日志文件：
 
-- `logs/proxy.log`：运行事件、启动信息和错误日志
-- `logs/traffic.log`：已处理连接的流量统计信息
+- `logs/proxy.log`：记录启动、运行状态与错误信息
+- `logs/traffic.log`：记录每条连接的流量统计数据
+- `logs/nebulagate_debug.log`：GUI 调试日志
 
-流量日志记录字段包括：
+流量日志中包含的信息包括：
 
-- 时间戳
+- 时间
 - 客户端地址
 - 协议类型
-- 目标主机
+- 目标地址
 - 目标端口
 - 状态
 - 上行字节数
 - 下行字节数
 - 耗时（毫秒）
 
-## 典型使用场景
+## ⚠️ 注意事项与限制
 
-### 本地统一代理入口
+- GUI 对 `os.startfile` 的使用使其更偏向 Windows 环境
+- 当前上游验证依赖预设测试目标，在受限网络环境下可能误判
+- 未看到完整打包、发布或自动化测试配置
+- 配置文件使用明文存储账号密码，部署时需要自行做好保护
 
-将浏览器、脚本或其他客户端指向本地监听地址，例如：
+## 🔒 安全注意事项
 
-- `127.0.0.1:7463`
+- 不要将真实 `proxy.conf` 提交到版本控制系统
+- 不要在 README、截图或日志中泄露上游代理凭据
+- 建议使用 `proxy.example.conf` 作为模板初始化新环境
+- 如果运行环境中包含真实口令，应限制配置文件访问权限
 
-NebulaProxy 会根据配置决定是直连还是通过上游代理转发。
+## 📁 项目结构
 
-### 上游代理连通性验证
+```text
+.
+├── proxy.py           # 核心多协议代理服务
+├── NebulaGate.py      # PySide6 桌面管理界面
+├── proxy.conf         # 本地运行配置文件（敏感）
+├── proxy.example.conf # 脱敏示例配置
+├── requirements.txt   # GUI 依赖
+├── CHANGELOG.md       # 变更记录
+├── LICENSE            # MIT 许可证
+├── README_EN.md       # 英文文档
+└── logs/              # 运行时自动创建的日志目录
+```
 
-如果你维护一个上游 HTTP 代理，可通过 GUI 先验证连通性和认证状态，再让真实流量经过该代理。
+## 📌 项目元信息
 
-### 本地 SOCKS5 访问控制
-
-启用 `[socks5_auth]` 后，SOCKS5 客户端必须先通过认证，代理才会接受连接。
-
-## 注意事项与限制
-
-- `NebulaGate.py` 使用 `os.startfile` 打开日志目录，该行为依赖 Windows。
-- 当前上游验证默认以 `www.baidu.com:80` 作为测试目标，因此在受限网络环境中可能验证失败。
-- 仓库已提供脱敏示例配置 `proxy.example.conf`，可作为新环境初始化模板。
-- 仓库目前未提供打包元数据或发布流程。
-
-## 安全说明
-
-- 不要将真实代理凭据提交到版本控制系统。
-- 当 `proxy.conf` 包含真实用户名或密码时，应将其视为敏感文件。
-- 在真实环境中运行前，请先将示例占位值替换为实际配置。
-
-## 快速开始
-
-1. 编辑 `proxy.conf`
-2. 选择一种启动方式：
-   - `python proxy.py`
-   - `python NebulaGate.py`
-3. 将客户端指向配置好的本地监听地址
-4. 检查 `logs/proxy.log` 和 `logs/traffic.log`
-
-## 项目元信息
-
-- 依赖清单：`requirements.txt`
+- 依赖文件：`requirements.txt`
 - 示例配置：`proxy.example.conf`
+- 英文文档：`README_EN.md`
 - 许可证：`LICENSE`（MIT）
-- 变更记录：`CHANGELOG.md`
 
 ## English Documentation
 
-For an English version of the documentation, see [README_EN.md](README_EN.md).
+See [README_EN.md](README_EN.md) for the English version.
